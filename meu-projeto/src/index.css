@@ -1,0 +1,17 @@
+html{
+  height: 100%;
+}
+
+
+.root {
+  justify-content: space-between;
+  display: flex;
+}
+
+.direito .esquerdo {
+  width: 50%;
+}
+
+
+
+
