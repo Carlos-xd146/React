@@ -1,15 +1,69 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const languages = [
-  { code: 'en', name: "Inglês"},
-  { code: 'es', name: "Espanhol"},
-  { code: 'fr', name: "Frances"},
-  { code: 'de', name: "Alemão"},
-  { code: 'it', name: "Italiano"},
-  { code: 'pt', name: "Português"},
+  { code: 'en', name: "Inglês" },
+  { code: 'es', name: "Espanhol" },
+  { code: 'fr', name: "Frances" },
+  { code: 'de', name: "Alemão" },
+  { code: 'it', name: "Italiano" },
+  { code: 'pt', name: "Português" },
 ]
 
+
+
+
 function App() {
+  const [sourceLang, setSourceLang] = useState('pt')
+  const [targetLang, setTargetLang] = useState('en')
+  const [sourceText, setSourceText] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [translatedText, setTranslateText] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+
+    if (sourceText) {
+      const delay = setTimeout(() => {
+        handleTranlate()
+      }, 500);
+
+
+      return () => clearTimeout(delay)
+    }
+
+    handleTranlate()
+  }, [sourceText, targetLang, sourceLang])
+
+  const handleTranlate = async () => {
+    setIsLoading(true)
+    setError('')
+
+    try {
+
+      const response = await fetch(`https://api.mymemory.translated.net/get?q=${sourceText}!&langpair=${sourceLang}|${targetLang}`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ERROR: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      setTranslateText(data.responseData.translatedText)
+
+    } catch (err) {
+      setError(`Erro ao tentar traduzir: ${err.message}. Tente Novamente.`)
+    } finally {
+
+      setIsLoading(false)
+
+    }
+  }
+  const swapTranslate = () => {
+    setSourceLang(targetLang)
+    setTargetLang(sourceLang)
+    setSourceText(translatedText)
+    setTranslateText(sourceLang)
+  }
 
 
   return (
@@ -23,20 +77,20 @@ function App() {
       <main className='flex-grow flex items-start justify-center px-4 py-8'>
         <div className='w-full max-w-5xl bg-white rounded-lg shadow-md overflow-hidden'>
           <div className='flex items-center justify-between p-4 border-b border-gray-200'>
-            <select className='text-sm text-textColor bg-transparent border-none focus:outline-none cursor-pointer'>
-              {languages.map( (lang) => (
+            <select value={sourceLang} onChange={event => setSourceLang(event.target.value)} className='text-sm text-textColor bg-transparent border-none focus:outline-none cursor-pointer'>
+              {languages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
                   {lang.name}
                 </option>
               ))}
             </select>
-            
-            <button className='p-4 rounded-full bg-gray-500 outline-none'>
-              
+
+            <button className='p-4 rounded-full bg-gray-500 outline-none' onClick={swapTranslate}>
+
             </button>
-            
-            <select className='text-sm text-textColor bg-transparent border-none focus:outline-none cursor-pointer'>
-              {languages.map( (lang) => (
+
+            <select value={targetLang} onChange={event => setTargetLang(event.target.value)} className='text-sm text-textColor bg-transparent border-none focus:outline-none cursor-pointer'>
+              {languages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
                   {lang.name}
                 </option>
@@ -46,17 +100,38 @@ function App() {
 
           <div className='grid grid-cols-1 md:grid-cols-2'>
             <div className='p-4'>
-              <textarea placeholder='digite seu texto' className='w-full h-40 text-lg text-textColor bg-transparent resize-none border-none outline-none'>
+              <textarea value={sourceText} onChange={event => setSourceText(event.target.value)} placeholder='digite seu texto...' className='w-full h-40 text-lg text-textColor bg-transparent resize-none border-none outline-none'>
               </textarea>
             </div>
-            <div className='p-4 bg-secondaryBackground border-l border-gray-200'>
-
+            <div className='p-4 relative bg-secondaryBackground border-l border-gray-200'>
+              {isLoading ?(
+              <div className='absolute inset-0 flex items-center justify-center'>
+                <div className='animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500'></div>
+              </div>
+              ) : (
+              <p className='text-lg text-textColor'>{translatedText}</p>
+              )}
+              
             </div>
           </div>
 
 
+          {error && (
+            <div className='p-4 bg-red-100 border-t border-red-400 text-red-700'>
+              {error}
+            </div>
+          )}
+
         </div>
       </main>
+
+      <footer className='bg-white border-t border-grat-200 mt-auto'>
+        <div className='max-w-5xl mx-auto px-4 py-3 text-sm text-headerColor'>
+          &copy; {new Date().getFullYear()} Tradutor
+        </div>
+
+      </footer>
+
     </div>
   )
 }
